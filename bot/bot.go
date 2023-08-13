@@ -3,8 +3,10 @@ package bot
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/eduwr/go_discord_bot/rollingboard"
 )
 
 type Bot struct {
@@ -45,5 +47,19 @@ func (bot *Bot) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) 
 
 	if m.Content == "!gopher" {
 		s.ChannelMessageSend(m.ChannelID, "Hello Go Bot")
+	}
+
+	if strings.HasPrefix(m.Content, "!roll") {
+		board, err := rollingboard.NewRollingBoard(m.Content)
+
+		if err != nil {
+			s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("error: %v", err))
+
+		}
+
+		r := board.RollDices()
+
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%s => %d", m.Content, r))
+
 	}
 }
