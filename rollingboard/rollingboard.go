@@ -2,7 +2,6 @@ package rollingboard
 
 import (
 	"fmt"
-	"math/rand"
 	"regexp"
 	"strconv"
 	"strings"
@@ -48,29 +47,10 @@ func NewRollingBoard(diceNotation string) (*RollingBoard, error) {
 	}, nil
 }
 
-func RollBoard(diceNotation string) (string, error) {
-	regex := regexp.MustCompile(`!roll\s+([0-9]*d[0-9]+(\+[0-9]*d[0-9]+)*)`)
-	match := regex.FindStringSubmatch(diceNotation)
-	if len(match) < 2 {
-		return "", fmt.Errorf("invalid dice notation")
+func (b *RollingBoard) RollDices() int16 {
+	sum := int16(0)
+	for _, dice := range b.dices {
+		sum += int16(dice.Roll())
 	}
-
-	diceExpression := match[1]
-	parts := strings.Split(diceExpression, "+")
-	total := 0
-
-	for _, part := range parts {
-		subParts := strings.Split(part, "d")
-		if len(subParts) == 2 {
-			count, _ := strconv.Atoi(subParts[0])
-			sides, _ := strconv.Atoi(subParts[1])
-
-			for i := 0; i < count; i++ {
-				roll := 1 + rand.Intn(sides)
-				total += roll
-			}
-		}
-	}
-
-	return strconv.Itoa(total), nil
+	return sum
 }

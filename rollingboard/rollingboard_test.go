@@ -3,6 +3,8 @@ package rollingboard
 import (
 	"fmt"
 	"testing"
+
+	"github.com/eduwr/go_discord_bot/dice"
 )
 
 type Dice struct {
@@ -11,24 +13,53 @@ type Dice struct {
 
 func TestNewRollingBoard(t *testing.T) {
 	testCases := []struct {
-		input    string
-		expected error
+		input           string
+		expectedError   error
+		expectedDiceNum int
 	}{
-		{"!roll 2d6", nil},
-		{"!roll 3d10+1d4", nil},
-		{"!roll invalid", fmt.Errorf("invalid dice notation")},
-		{"!roll 3d1", fmt.Errorf("invalid dice size")},
+		{"!roll 2d6", nil, 2},
+		{"!roll 3d10+1d4", nil, 4},
+		{"!roll invalid", fmt.Errorf("invalid dice notation"), 0},
+		{"!roll 3d1", fmt.Errorf("invalid dice size"), 0},
 	}
 
 	for _, tc := range testCases {
-		_, err := NewRollingBoard(tc.input)
+		board, err := NewRollingBoard(tc.input)
 
-		if (err == nil && tc.expected != nil) || (err != nil && tc.expected == nil) {
-			t.Errorf("Expected error '%v' but got '%v'", tc.expected, err)
+		if tc.expectedError != nil {
+			if err == nil {
+				t.Errorf("expected error: `%v` but got `%v`", tc.expectedError, err)
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Unexpected error: `%v` for input '%s'", err, tc.input)
+			}
+
+			if len(board.dices) != tc.expectedDiceNum {
+				t.Errorf("Expected %d dice(s) but got %d for input `%s`", tc.expectedDiceNum, len(board.dices), tc.input)
+			}
+
 		}
 
-		if err != nil && tc.expected != nil && err.Error() != tc.expected.Error() {
-			t.Errorf("Expected error '%v' but got '%v'", tc.expected, err)
-		}
+	}
+}
+
+func TestRollDices(t *testing.T) {
+	d6, _ := dice.NewDice(6)
+	d8, _ := dice.NewDice(8)
+	d10, _ := dice.NewDice(10)
+
+	board := &RollingBoard{
+		dices: []dice.Dice{
+			*d6,
+			*d8,
+			*d10,
+		},
+	}
+
+	total := board.RollDices()
+
+	if total < int16(len(board.dices)) {
+		t.Errorf("Expected total to be greater than 0, but got %d", total)
 	}
 }
