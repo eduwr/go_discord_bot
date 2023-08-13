@@ -22,9 +22,5 @@ func getRandomNbr(s int8) int8 {
 }
 
 func (d dice) Roll() int8 {
-	r := getRandomNbr(d.size + 1)
-	for r == 0 {
-		r = getRandomNbr(d.size + 1)
-	}
-	return r
+	return getRandomNbr(d.size) + 1
 }
